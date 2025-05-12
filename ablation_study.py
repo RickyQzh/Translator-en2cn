@@ -148,7 +148,7 @@ def run_ablation_study():
         name = experiment['name']
         description = experiment['description']
         
-        # 生成实验名称和路径
+        # 生成实验名称和路径save
         exp_name = get_experiment_name(config, name)
         exp_output_dir = os.path.join(experiment_dir, exp_name)
         
