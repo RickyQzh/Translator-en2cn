@@ -92,22 +92,28 @@ class DecoderLayer(nn.Module):
 
 class TransformerMT(nn.Module):
     def __init__(self, src_vocab_size, trg_vocab_size, d_model=256, num_heads=8,
-                 num_encoder_layers=3, num_decoder_layers=3, d_ff=512, dropout=0.1, pad_idx=0):
+                 num_encoder_layers=3, num_decoder_layers=3, d_ff=512, dropout=0.1, pad_idx=0,
+                 use_positional_encoding=True, use_multihead_attention=True):
         super().__init__()
         self.pad_idx = pad_idx
         self.d_model = d_model
+        self.use_positional_encoding = use_positional_encoding
+        self.use_multihead_attention = use_multihead_attention
         
         self.src_embedding = nn.Embedding(src_vocab_size, d_model, padding_idx=pad_idx)
         self.trg_embedding = nn.Embedding(trg_vocab_size, d_model, padding_idx=pad_idx)
-        self.positional_encoding = PositionalEncoding(d_model)
+        
+        # Only create positional encoding if enabled
+        if use_positional_encoding:
+            self.positional_encoding = PositionalEncoding(d_model)
         
         self.encoder_layers = nn.ModuleList([
-            EncoderLayer(d_model, num_heads, d_ff, dropout)
+            EncoderLayer(d_model, num_heads if use_multihead_attention else 1, d_ff, dropout)
             for _ in range(num_encoder_layers)
         ])
         
         self.decoder_layers = nn.ModuleList([
-            DecoderLayer(d_model, num_heads, d_ff, dropout)
+            DecoderLayer(d_model, num_heads if use_multihead_attention else 1, d_ff, dropout)
             for _ in range(num_decoder_layers)
         ])
         
@@ -133,7 +139,15 @@ class TransformerMT(nn.Module):
     
     def encode(self, src):
         src_mask = self.make_src_mask(src)
-        src_embedded = self.dropout(self.positional_encoding(self.src_embedding(src)))
+        
+        # Apply embedding
+        src_embedded = self.src_embedding(src)
+        
+        # Apply positional encoding if enabled
+        if self.use_positional_encoding:
+            src_embedded = self.positional_encoding(src_embedded)
+            
+        src_embedded = self.dropout(src_embedded)
         
         enc_output = src_embedded
         for enc_layer in self.encoder_layers:
@@ -144,7 +158,14 @@ class TransformerMT(nn.Module):
     def decode(self, trg, enc_output, src_mask):
         trg_mask = self.make_trg_mask(trg)
         
-        trg_embedded = self.dropout(self.positional_encoding(self.trg_embedding(trg)))
+        # Apply embedding
+        trg_embedded = self.trg_embedding(trg)
+        
+        # Apply positional encoding if enabled
+        if self.use_positional_encoding:
+            trg_embedded = self.positional_encoding(trg_embedded)
+            
+        trg_embedded = self.dropout(trg_embedded)
         
         dec_output = trg_embedded
         for dec_layer in self.decoder_layers:

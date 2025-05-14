@@ -73,6 +73,7 @@ def train_epoch(model, train_loader, optimizer, criterion, device, int2word_cn=N
     total_loss = 0
     bleu_scores = []
     smooth = SmoothingFunction().method1
+    weights = (0.5, 0.5, 0, 0)  # Equal weights for 1-gram to 4-gram
     
     for src, trg in train_loader:
         src, trg = src.to(device), trg.to(device)
@@ -113,9 +114,10 @@ def train_epoch(model, train_loader, optimizer, criterion, device, int2word_cn=N
                     if idx.item() not in [0, 1, 2, 3]:  # Skip PAD, BOS, EOS, UNK
                         ref_sentence.append(int2word_cn.get(str(idx.item()), "UNK"))
                 
-                # Calculate BLEU score
+                # Calculate BLEU score with equal weights for 1-gram to 4-gram
                 if pred_sentence and ref_sentence:
                     bleu = sentence_bleu([ref_sentence], pred_sentence, 
+                                        weights=weights,
                                         smoothing_function=smooth)
                     bleu_scores.append(bleu)
     
@@ -129,6 +131,7 @@ def evaluate(model, data_loader, criterion, device, int2word_cn=None, calculate_
     total_loss = 0
     bleu_scores = []
     smooth = SmoothingFunction().method1
+    weights = (0.5, 0.5, 0, 0)  # Equal weights for 1-gram to 4-gram
     
     with torch.no_grad():
         for src, trg in data_loader:
@@ -164,9 +167,10 @@ def evaluate(model, data_loader, criterion, device, int2word_cn=None, calculate_
                         if idx.item() not in [0, 1, 2, 3]:  # Skip PAD, BOS, EOS, UNK
                             ref_sentence.append(int2word_cn.get(str(idx.item()), "UNK"))
                     
-                    # Calculate BLEU score
+                    # Calculate BLEU score with equal weights for 1-gram to 4-gram
                     if pred_sentence and ref_sentence:
                         bleu = sentence_bleu([ref_sentence], pred_sentence, 
+                                            weights=weights,
                                             smoothing_function=smooth)
                         bleu_scores.append(bleu)
     
@@ -176,31 +180,44 @@ def evaluate(model, data_loader, criterion, device, int2word_cn=None, calculate_
     return avg_loss, avg_bleu
 
 def plot_metrics(metrics_df, save_path='training_metrics.png'):
-    # Create a figure with 2 subplots
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+    # Convert epoch to integer for better display
+    metrics_df['epoch'] = metrics_df['epoch'].astype(int)
+    
+    # Create a figure with 2 side-by-side subplots (square shape)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
     
     # Plot loss
-    ax1.plot(metrics_df['epoch'], metrics_df['train_loss'], 'b-', label='Training Loss')
-    ax1.plot(metrics_df['epoch'], metrics_df['val_loss'], 'r-', label='Validation Loss')
-    ax1.plot(metrics_df['epoch'], metrics_df['test_loss'], 'g-', label='Test Loss')
-    ax1.set_xlabel('Epoch')
-    ax1.set_ylabel('Loss')
-    ax1.set_title('Loss vs. Epoch')
+    line1, = ax1.plot(metrics_df['epoch'], metrics_df['train_loss'], 'bo-', label='Training Loss')
+    line2, = ax1.plot(metrics_df['epoch'], metrics_df['val_loss'], 'ro-', label='Validation Loss')
+    line3, = ax1.plot(metrics_df['epoch'], metrics_df['test_loss'], 'go-', label='Test Loss')
+    
+    # Set integer ticks for x-axis
+    ax1.set_xticks(metrics_df['epoch'])
+    ax1.set_xlabel('Epoch', fontsize=12)
+    ax1.set_ylabel('Loss', fontsize=12)
+    ax1.set_title('Loss vs. Epoch', fontsize=14)
     ax1.legend()
-    ax1.grid(True)
+    ax1.grid(True, linestyle='--', alpha=0.7)
     
     # Plot BLEU
-    ax2.plot(metrics_df['epoch'], metrics_df['train_bleu'], 'b-', label='Training BLEU')
-    ax2.plot(metrics_df['epoch'], metrics_df['val_bleu'], 'r-', label='Validation BLEU')
-    ax2.plot(metrics_df['epoch'], metrics_df['test_bleu'], 'g-', label='Test BLEU')
-    ax2.set_xlabel('Epoch')
-    ax2.set_ylabel('BLEU Score')
-    ax2.set_title('BLEU Score vs. Epoch')
-    ax2.legend()
-    ax2.grid(True)
+    line4, = ax2.plot(metrics_df['epoch'], metrics_df['train_bleu'], 'bo-', label='Training BLEU')
+    line5, = ax2.plot(metrics_df['epoch'], metrics_df['val_bleu'], 'ro-', label='Validation BLEU')
+    line6, = ax2.plot(metrics_df['epoch'], metrics_df['test_bleu'], 'go-', label='Test BLEU')
     
-    plt.tight_layout()
-    plt.savefig(save_path)
+    # Set integer ticks for x-axis
+    ax2.set_xticks(metrics_df['epoch'])
+    ax2.set_xlabel('Epoch', fontsize=12)
+    ax2.set_ylabel('BLEU Score', fontsize=12)
+    ax2.set_title('BLEU Score vs. Epoch', fontsize=14)
+    ax2.legend()
+    ax2.grid(True, linestyle='--', alpha=0.7)
+    
+    # Ensure the aspect ratio is more square-like
+    ax1.set_box_aspect(1)
+    ax2.set_box_aspect(1)
+    
+    plt.tight_layout(pad=3.0)
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
 
 def calculate_warmup_steps(total_steps, warmup_ratio=0.1):
@@ -357,7 +374,7 @@ def train_model(config, output_dir=None):
             # 每100步评估一次
             if global_step % 100 == 0:
                 current_lr = optimizer.param_groups[0]['lr']
-                print(f"Step {global_step}, LR: {current_lr:.6f}, Loss: {loss.item():.4f}")
+                # print(f"Step {global_step}, LR: {current_lr:.6f}, Loss: {loss.item():.4f}")
         
         # 计算epoch平均损失
         epoch_train_loss /= batch_count
@@ -396,7 +413,7 @@ def train_model(config, output_dir=None):
                 'val_loss': val_loss,
                 'val_bleu': val_bleu,
             }, os.path.join(output_dir, 'best_loss_model.pth'))
-            print('Best loss model saved!')
+            # print('Best loss model saved!')
             early_stop_counter = 0  # 重置早停计数器
         else:
             early_stop_counter += 1
@@ -412,7 +429,7 @@ def train_model(config, output_dir=None):
                 'val_loss': val_loss,
                 'val_bleu': val_bleu,
             }, os.path.join(output_dir, 'best_bleu_model.pth'))
-            print('Best BLEU model saved!')
+            # print('Best BLEU model saved!')
         
         # 检查是否需要早停
         if early_stop_counter >= PATIENCE:
@@ -457,7 +474,7 @@ def train_model(config, output_dir=None):
 def main():
     # 默认配置
     config = {
-        'batch_size': 64,
+        'batch_size': 512,
         'epochs': 30,
         'learning_rate': 1e-3,  # 初始学习率
         'd_model': 256,
