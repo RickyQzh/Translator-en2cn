@@ -73,7 +73,7 @@ def train_epoch(model, train_loader, optimizer, criterion, device, int2word_cn=N
     total_loss = 0
     bleu_scores = []
     smooth = SmoothingFunction().method1
-    weights = (0.5, 0.5, 0, 0)  # Equal weights for 1-gram to 4-gram
+    weights = (0.25, 0.25, 0.25, 0.25)  # Equal weights for 1-gram to 4-gram
     
     for src, trg in train_loader:
         src, trg = src.to(device), trg.to(device)
@@ -131,7 +131,7 @@ def evaluate(model, data_loader, criterion, device, int2word_cn=None, calculate_
     total_loss = 0
     bleu_scores = []
     smooth = SmoothingFunction().method1
-    weights = (0.5, 0.5, 0, 0)  # Equal weights for 1-gram to 4-gram
+    weights = (0.25, 0.25, 0.25, 0.25)  # Equal weights for 1-gram to 4-gram
     
     with torch.no_grad():
         for src, trg in data_loader:
