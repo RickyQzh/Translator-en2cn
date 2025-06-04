@@ -474,7 +474,7 @@ def train_model(config, output_dir=None):
 def main():
     # 默认配置
     config = {
-        'batch_size': 512,
+        'batch_size': 64,
         'epochs': 30,
         'learning_rate': 1e-3,  # 初始学习率
         'd_model': 256,
