@@ -1,0 +1,397 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Transformer Translation Ablation Study Results</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+                h1, h2, h3 { color: #2c3e50; }
+                h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                h2 { border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; margin-top: 30px; }
+                table { border-collapse: collapse; width: 100%; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e1e1e1; }
+                th { background-color: #3498db; color: white; font-weight: 500; }
+                tr:nth-child(even) { background-color: #f8f9fa; }
+                tr:hover { background-color: #f1f1f1; }
+                .results-container { margin-top: 30px; }
+                .plots-container { display: flex; flex-direction: column; align-items: center; margin-top: 30px; }
+                .plot-row { display: flex; justify-content: center; width: 100%; margin-bottom: 30px; }
+                .plot-image { max-width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                .plot-caption { text-align: center; margin-top: 10px; color: #7f8c8d; font-style: italic; }
+                .highlight { background-color: #d5f5e3 !important; }
+                .description { color: #7f8c8d; font-style: italic; }
+                .summary { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0; }
+                .footer { margin-top: 50px; text-align: center; font-size: 0.9em; color: #7f8c8d; border-top: 1px solid #eee; padding-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <h1>Transformer Translation Ablation Study Results</h1>
+            <p>Generated on: 2025-06-06 01:40:55</p>
+            
+            <div class="summary">
+                <p>This report presents the results of ablation studies on the Transformer-based machine translation model.
+                The experiments test different configurations and components to determine their impact on translation performance.</p>
+            </div>
+            
+            <div class="results-container">
+                <h2>Results Table</h2>
+                <table>
+                    <tr>
+                        <th>Experiment</th>
+                        <th>Description</th>
+                        <th>Best Val BLEU</th>
+                        <th>Final Test BLEU</th>
+                        <th>BLEU-1</th>
+                        <th>BLEU-2</th>
+                        <th>BLEU-3</th>
+                        <th>BLEU-4</th>
+                        <th>Parameters</th>
+                    </tr>
+        
+                    <tr class="">
+                        <td><strong>activation_gelu_activation_gelu</strong></td>
+                        <td class="description">使用GELU激活函数</td>
+                        <td>0.3555</td>
+                        <td>0.3220</td>
+                        <td>0.7432</td>
+                        <td>0.5799</td>
+                        <td>0.4340</td>
+                        <td>0.3220</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>activation_swish_activation_swish</strong></td>
+                        <td class="description">使用Swish激活函数</td>
+                        <td>0.3408</td>
+                        <td>0.3110</td>
+                        <td>0.7310</td>
+                        <td>0.5686</td>
+                        <td>0.4229</td>
+                        <td>0.3110</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>attention_heads_16_num_heads_16</strong></td>
+                        <td class="description">增加注意力头数 (16)</td>
+                        <td>0.3472</td>
+                        <td>0.3115</td>
+                        <td>0.7248</td>
+                        <td>0.5644</td>
+                        <td>0.4222</td>
+                        <td>0.3115</td>
+                        <td>d_model=256, num_heads=16, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>attention_heads_4_num_heads_4</strong></td>
+                        <td class="description">减少注意力头数 (4)</td>
+                        <td>0.3433</td>
+                        <td>0.3187</td>
+                        <td>0.7306</td>
+                        <td>0.5715</td>
+                        <td>0.4298</td>
+                        <td>0.3187</td>
+                        <td>d_model=256, num_heads=4, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>baseline</strong></td>
+                        <td class="description">基准模型，使用默认参数</td>
+                        <td>0.3484</td>
+                        <td>0.3164</td>
+                        <td>0.7297</td>
+                        <td>0.5694</td>
+                        <td>0.4268</td>
+                        <td>0.3164</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>d_model_128_d_model_128</strong></td>
+                        <td class="description">较小的隐藏维度 (128)</td>
+                        <td>0.3061</td>
+                        <td>0.2810</td>
+                        <td>0.7069</td>
+                        <td>0.5397</td>
+                        <td>0.3927</td>
+                        <td>0.2810</td>
+                        <td>d_model=128, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>dropout_0.1_dropout_0.1</strong></td>
+                        <td class="description">较小的Dropout率</td>
+                        <td>0.3299</td>
+                        <td>0.3025</td>
+                        <td>0.7235</td>
+                        <td>0.5580</td>
+                        <td>0.4129</td>
+                        <td>0.3025</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.1, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>dropout_0.3_dropout_0.3</strong></td>
+                        <td class="description">较大的Dropout率</td>
+                        <td>0.3399</td>
+                        <td>0.3148</td>
+                        <td>0.7324</td>
+                        <td>0.5703</td>
+                        <td>0.4260</td>
+                        <td>0.3148</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.3, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>label_smoothing_0.0_label_smoothing_0.0</strong></td>
+                        <td class="description">无标签平滑</td>
+                        <td>0.3425</td>
+                        <td>0.3086</td>
+                        <td>0.7269</td>
+                        <td>0.5647</td>
+                        <td>0.4201</td>
+                        <td>0.3086</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.0, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>label_smoothing_0.2_label_smoothing_0.2</strong></td>
+                        <td class="description">较大的标签平滑系数</td>
+                        <td>0.3527</td>
+                        <td>0.3100</td>
+                        <td>0.7207</td>
+                        <td>0.5629</td>
+                        <td>0.4206</td>
+                        <td>0.3100</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.2, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>large_model_d_model_512_num_heads_16_d_ff_2048</strong></td>
+                        <td class="description">较大的模型尺寸</td>
+                        <td>0.3411</td>
+                        <td>0.3152</td>
+                        <td>0.7340</td>
+                        <td>0.5706</td>
+                        <td>0.4260</td>
+                        <td>0.3152</td>
+                        <td>d_model=512, num_heads=16, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>layers_3_num_encoder_layers_3_num_decoder_layers_3</strong></td>
+                        <td class="description">减少编码器和解码器层数</td>
+                        <td>0.3315</td>
+                        <td>0.3114</td>
+                        <td>0.7328</td>
+                        <td>0.5694</td>
+                        <td>0.4237</td>
+                        <td>0.3114</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=3, num_decoder_layers=3, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="highlight">
+                        <td><strong>layers_9_num_encoder_layers_9_num_decoder_layers_9</strong></td>
+                        <td class="description">增加编码器和解码器层数</td>
+                        <td>0.3565</td>
+                        <td>0.3247</td>
+                        <td>0.7422</td>
+                        <td>0.5798</td>
+                        <td>0.4361</td>
+                        <td>0.3247</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=9, num_decoder_layers=9, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>lr_2e-3_learning_rate_0.005</strong></td>
+                        <td class="description">较大的学习率</td>
+                        <td>0.0757</td>
+                        <td>0.0756</td>
+                        <td>0.3750</td>
+                        <td>0.2227</td>
+                        <td>0.1301</td>
+                        <td>0.0756</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.005, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>lr_5e-4_learning_rate_0.0002</strong></td>
+                        <td class="description">较小的学习率</td>
+                        <td>0.2467</td>
+                        <td>0.2309</td>
+                        <td>0.6572</td>
+                        <td>0.4861</td>
+                        <td>0.3390</td>
+                        <td>0.2309</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.0002, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>no_layer_norm_use_layer_norm_False</strong></td>
+                        <td class="description">移除层归一化</td>
+                        <td>0.3384</td>
+                        <td>0.3086</td>
+                        <td>0.7273</td>
+                        <td>0.5641</td>
+                        <td>0.4190</td>
+                        <td>0.3086</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>no_multihead_attention_use_multihead_attention_False</strong></td>
+                        <td class="description">使用单头注意力替代多头注意力</td>
+                        <td>0.3468</td>
+                        <td>0.3184</td>
+                        <td>0.7387</td>
+                        <td>0.5764</td>
+                        <td>0.4305</td>
+                        <td>0.3184</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=False</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>no_positional_encoding_use_positional_encoding_False</strong></td>
+                        <td class="description">不使用位置编码</td>
+                        <td>0.3257</td>
+                        <td>0.2990</td>
+                        <td>0.7204</td>
+                        <td>0.5558</td>
+                        <td>0.4104</td>
+                        <td>0.2990</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=False, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>norm_pre_norm_position_pre</strong></td>
+                        <td class="description">前置层归一化</td>
+                        <td>0.3356</td>
+                        <td>0.3036</td>
+                        <td>0.7220</td>
+                        <td>0.5585</td>
+                        <td>0.4139</td>
+                        <td>0.3036</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>optimizer_adagrad_optimizer_adagrad</strong></td>
+                        <td class="description">使用Adagrad优化器</td>
+                        <td>0.1402</td>
+                        <td>0.1364</td>
+                        <td>0.5487</td>
+                        <td>0.3637</td>
+                        <td>0.2256</td>
+                        <td>0.1364</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>optimizer_rmsprop_optimizer_rmsprop</strong></td>
+                        <td class="description">使用RMSprop优化器</td>
+                        <td>0.3261</td>
+                        <td>0.2954</td>
+                        <td>0.7178</td>
+                        <td>0.5536</td>
+                        <td>0.4073</td>
+                        <td>0.2954</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>position_learned_position_encoding_type_learned</strong></td>
+                        <td class="description">使用学习型位置编码</td>
+                        <td>0.3476</td>
+                        <td>0.3018</td>
+                        <td>0.7175</td>
+                        <td>0.5554</td>
+                        <td>0.4120</td>
+                        <td>0.3018</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>position_relative_position_encoding_type_relative</strong></td>
+                        <td class="description">使用相对位置编码</td>
+                        <td>0.3039</td>
+                        <td>0.3192</td>
+                        <td>0.7373</td>
+                        <td>0.5752</td>
+                        <td>0.4307</td>
+                        <td>0.3192</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>small_model_d_model_128_num_heads_4_d_ff_512</strong></td>
+                        <td class="description">较小的模型尺寸</td>
+                        <td>0.3084</td>
+                        <td>0.2758</td>
+                        <td>0.7046</td>
+                        <td>0.5361</td>
+                        <td>0.3878</td>
+                        <td>0.2758</td>
+                        <td>d_model=128, num_heads=4, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=nan, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>warmup_ratio_0.05_warmup_ratio_0.02</strong></td>
+                        <td class="description">较小的预热比例 (2%)</td>
+                        <td>0.3517</td>
+                        <td>0.3125</td>
+                        <td>0.7275</td>
+                        <td>0.5662</td>
+                        <td>0.4231</td>
+                        <td>0.3125</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=0.02, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                    <tr class="">
+                        <td><strong>warmup_ratio_0.2_warmup_ratio_0.2</strong></td>
+                        <td class="description">较大的预热比例 (20%)</td>
+                        <td>0.3558</td>
+                        <td>0.3113</td>
+                        <td>0.7333</td>
+                        <td>0.5694</td>
+                        <td>0.4237</td>
+                        <td>0.3113</td>
+                        <td>d_model=256, num_heads=8, num_encoder_layers=6, num_decoder_layers=6, dropout=0.2, learning_rate=0.001, label_smoothing=0.1, warmup_ratio=0.2, use_positional_encoding=True, use_multihead_attention=True</td>
+                    </tr>
+            
+                </table>
+            </div>
+            
+            <div class="plots-container">
+                <h2>Comparison Plots</h2>
+            
+                <div class="plot-row">
+                    <div style="text-align: center; margin: 0 15px;">
+                        <img class="plot-image" src="ablation_comparison.png" alt="Performance Comparison">
+                        <p class="plot-caption">Figure 1: Validation BLEU Score and Test Loss Comparison Across Experiments</p>
+                    </div>
+                </div>
+            
+                <div class="plot-row">
+                    <div style="text-align: center; margin: 0 15px;">
+                        <img class="plot-image" src="ablation_test_bleu.png" alt="Test BLEU Comparison">
+                        <p class="plot-caption">Figure 2: Test BLEU Score Comparison Across Experiments</p>
+                    </div>
+                </div>
+            
+                <div class="plot-row">
+                    <div style="text-align: center; margin: 0 15px;">
+                        <img class="plot-image" src="ablation_ngram_bleu.png" alt="N-gram BLEU Comparison">
+                        <p class="plot-caption">Figure 3: N-gram BLEU Score Comparison (BLEU-1 to BLEU-4) Across Experiments</p>
+                    </div>
+                </div>
+            
+            </div>
+            
+            <div class="footer">
+                <p>Transformer Translation Model Ablation Study &copy; 2025</p>
+            </div>
+        </body>
+        </html>
+        

@@ -1,0 +1,18 @@
+{
+    "batch_size": 256,
+    "epochs": 30,
+    "learning_rate": 0.001,
+    "d_model": 256,
+    "num_heads": 8,
+    "num_encoder_layers": 6,
+    "num_decoder_layers": 6,
+    "d_ff": 1024,
+    "dropout": 0.2,
+    "label_smoothing": 0.0,
+    "patience": 5,
+    "use_positional_encoding": true,
+    "use_multihead_attention": true,
+    "ablation_keys": [
+        "label_smoothing"
+    ]
+}
