@@ -72,7 +72,7 @@ def train_epoch(model, train_loader, optimizer, criterion, device, int2word_cn=N
     model.train()
     total_loss = 0
     bleu_scores = []
-    smooth = SmoothingFunction().method1
+    smooth = SmoothingFunction().method5  # Better smoothing method
     weights = (0.25, 0.25, 0.25, 0.25)  # Equal weights for 1-gram to 4-gram
     
     for src, trg in train_loader:
@@ -130,7 +130,7 @@ def evaluate(model, data_loader, criterion, device, int2word_cn=None, calculate_
     model.eval()
     total_loss = 0
     bleu_scores = []
-    smooth = SmoothingFunction().method1
+    smooth = SmoothingFunction().method5  # Better smoothing method
     weights = (0.25, 0.25, 0.25, 0.25)  # Equal weights for 1-gram to 4-gram
     
     with torch.no_grad():
@@ -219,6 +219,60 @@ def plot_metrics(metrics_df, save_path='training_metrics.png'):
     plt.tight_layout(pad=3.0)
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
+
+def calculate_ngram_bleus(model, data_loader, device, int2word_cn):
+    """
+    计算1-gram到4-gram的BLEU分数
+    """
+    model.eval()
+    bleu_scores_by_ngram = [[] for _ in range(4)]  # 存储1-gram到4-gram的BLEU分数
+    smooth = SmoothingFunction().method5
+    
+    with torch.no_grad():
+        for src, trg in data_loader:
+            src, trg = src.to(device), trg.to(device)
+            
+            output = model(src, trg[:, :-1])
+            
+            # Get predicted translations
+            _, predicted = torch.max(output, dim=-1)
+            
+            for i in range(trg.size(0)):
+                # Convert to words
+                pred_sentence = []
+                for idx in predicted[i]:
+                    if idx.item() == 2:  # EOS token
+                        break
+                    if idx.item() not in [0, 1, 2, 3]:  # Skip PAD, BOS, EOS, UNK
+                        pred_sentence.append(int2word_cn.get(str(idx.item()), "UNK"))
+                
+                # Get reference translation
+                ref_sentence = []
+                for idx in trg[i, 1:]:  # Skip BOS token
+                    if idx.item() == 2:  # EOS token
+                        break
+                    if idx.item() not in [0, 1, 2, 3]:  # Skip PAD, BOS, EOS, UNK
+                        ref_sentence.append(int2word_cn.get(str(idx.item()), "UNK"))
+                
+                # Calculate BLEU scores for each n-gram order
+                if pred_sentence and ref_sentence:
+                    for n in range(1, 5):  # 1-gram to 4-gram
+                        # Create weights for current n-gram order
+                        weights = tuple([1.0/n] * n)
+                        bleu = sentence_bleu([ref_sentence], pred_sentence, 
+                                            weights=weights,
+                                            smoothing_function=smooth)
+                        bleu_scores_by_ngram[n-1].append(bleu)
+    
+    # Calculate average BLEU for each n-gram order
+    avg_bleus = []
+    for n in range(4):
+        if bleu_scores_by_ngram[n]:
+            avg_bleus.append(sum(bleu_scores_by_ngram[n]) / len(bleu_scores_by_ngram[n]))
+        else:
+            avg_bleus.append(0.0)
+    
+    return avg_bleus
 
 def calculate_warmup_steps(total_steps, warmup_ratio=0.1):
     """计算合适的warmup步数，默认为总步数的10%"""
@@ -449,6 +503,13 @@ def train_model(config, output_dir=None):
     test_loss, test_bleu = evaluate(model, test_loader, criterion, device, int2word_cn, calculate_bleu=True)
     print(f'Final Test Loss: {test_loss:.4f}, BLEU: {test_bleu:.4f}')
     
+    # Calculate and display n-gram BLEU scores
+    print("\nDetailed n-gram BLEU scores on test set:")
+    ngram_bleus = calculate_ngram_bleus(model, test_loader, device, int2word_cn)
+    for n, bleu_score in enumerate(ngram_bleus, 1):
+        print(f'BLEU-{n} (n-gram={n}): {bleu_score:.4f}')
+    print(f'BLEU-4 (weighted): {test_bleu:.4f}')
+    
     # 额外绘制学习率变化曲线
     plt.figure(figsize=(10, 6))
     plt.plot(metrics['step'], metrics['learning_rate'], 'b-')
@@ -468,7 +529,11 @@ def train_model(config, output_dir=None):
         'best_val_loss': best_val_loss,
         'best_val_bleu': best_bleu,
         'final_test_loss': test_loss,
-        'final_test_bleu': test_bleu
+        'final_test_bleu': test_bleu,
+        'final_test_bleu_1': ngram_bleus[0],
+        'final_test_bleu_2': ngram_bleus[1], 
+        'final_test_bleu_3': ngram_bleus[2],
+        'final_test_bleu_4': ngram_bleus[3]
     }
 
 def main():
@@ -495,6 +560,14 @@ def main():
     print(f"Best validation BLEU: {results['best_val_bleu']:.4f}")
     print(f"Final test loss: {results['final_test_loss']:.4f}")
     print(f"Final test BLEU: {results['final_test_bleu']:.4f}")
+    
+    # 输出详细的n-gram BLEU分数
+    print("\nSummary of n-gram BLEU scores:")
+    print(f"BLEU-1: {results['final_test_bleu_1']:.4f}")
+    print(f"BLEU-2: {results['final_test_bleu_2']:.4f}")
+    print(f"BLEU-3: {results['final_test_bleu_3']:.4f}")
+    print(f"BLEU-4: {results['final_test_bleu_4']:.4f}")
+    print(f"BLEU-4 (weighted): {results['final_test_bleu']:.4f}")
 
 if __name__ == '__main__':
     main()

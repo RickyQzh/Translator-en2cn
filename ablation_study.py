@@ -290,6 +290,32 @@ def plot_ablation_results(results_df, output_dir):
             plt.savefig(os.path.join(output_dir, 'ablation_test_bleu.png'), dpi=300, bbox_inches='tight')
             plt.close()
         
+        # 生成n-gram BLEU对比图（如果存在相应列）
+        ngram_columns = ['final_test_bleu_1', 'final_test_bleu_2', 'final_test_bleu_3', 'final_test_bleu_4']
+        available_ngram_columns = [col for col in ngram_columns if col in results_df.columns]
+        
+        if available_ngram_columns:
+            plt.figure(figsize=(16, 10))
+            
+            x_pos = range(len(results_df))
+            width = 0.2
+            colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+            
+            for i, col in enumerate(available_ngram_columns):
+                n_gram = int(col.split('_')[-1])
+                plt.bar([p + width * i for p in x_pos], results_df[col], 
+                       width=width, label=f'BLEU-{n_gram}', color=colors[i], alpha=0.8)
+            
+            plt.xlabel('Experiment', fontsize=12, fontweight='bold')
+            plt.ylabel('BLEU Score', fontsize=12, fontweight='bold')
+            plt.title('Ablation Study: N-gram BLEU Comparison', fontsize=14, fontweight='bold')
+            plt.xticks([p + width * 1.5 for p in x_pos], results_df['experiment'], rotation=45, ha='right')
+            plt.legend()
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            plt.tight_layout()
+            plt.savefig(os.path.join(output_dir, 'ablation_ngram_bleu.png'), dpi=300, bbox_inches='tight')
+            plt.close()
+        
         print(f"比较图表已生成在: {output_dir}")
         
         # 创建一个易读的HTML报告
@@ -354,6 +380,10 @@ def create_html_report(results_df, output_dir):
                         <th>Description</th>
                         <th>Best Val BLEU</th>
                         <th>Final Test BLEU</th>
+                        <th>BLEU-1</th>
+                        <th>BLEU-2</th>
+                        <th>BLEU-3</th>
+                        <th>BLEU-4</th>
                         <th>Parameters</th>
                     </tr>
         """
@@ -391,6 +421,10 @@ def create_html_report(results_df, output_dir):
             description = row.get('description', '-')
             val_bleu = row.get('best_val_bleu', 0.0)
             test_bleu = row.get('final_test_bleu', 0.0)
+            bleu_1 = row.get('final_test_bleu_1', 0.0)
+            bleu_2 = row.get('final_test_bleu_2', 0.0)
+            bleu_3 = row.get('final_test_bleu_3', 0.0)
+            bleu_4 = row.get('final_test_bleu_4', 0.0)
             
             html_content += f"""
                     <tr class="{row_class}">
@@ -398,6 +432,10 @@ def create_html_report(results_df, output_dir):
                         <td class="description">{description}</td>
                         <td>{val_bleu:.4f}</td>
                         <td>{test_bleu:.4f}</td>
+                        <td>{bleu_1:.4f}</td>
+                        <td>{bleu_2:.4f}</td>
+                        <td>{bleu_3:.4f}</td>
+                        <td>{bleu_4:.4f}</td>
                         <td>{params_str}</td>
                     </tr>
             """
@@ -430,6 +468,18 @@ def create_html_report(results_df, output_dir):
                     <div style="text-align: center; margin: 0 15px;">
                         <img class="plot-image" src="ablation_test_bleu.png" alt="Test BLEU Comparison">
                         <p class="plot-caption">Figure 2: Test BLEU Score Comparison Across Experiments</p>
+                    </div>
+                </div>
+            """
+        
+        # 检查n-gram BLEU图表是否存在
+        ablation_ngram_bleu_path = os.path.join(output_dir, 'ablation_ngram_bleu.png')
+        if os.path.exists(ablation_ngram_bleu_path):
+            html_content += """
+                <div class="plot-row">
+                    <div style="text-align: center; margin: 0 15px;">
+                        <img class="plot-image" src="ablation_ngram_bleu.png" alt="N-gram BLEU Comparison">
+                        <p class="plot-caption">Figure 3: N-gram BLEU Score Comparison (BLEU-1 to BLEU-4) Across Experiments</p>
                     </div>
                 </div>
             """
