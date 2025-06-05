@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim import Adam
+from torch.optim import Adam, Adagrad, RMSprop
 from torch.optim.lr_scheduler import _LRScheduler
 from model import TransformerMT
 from dataloader import TranslationDataset, collate_fn
@@ -278,9 +278,14 @@ def calculate_warmup_steps(total_steps, warmup_ratio=0.1):
     """计算合适的warmup步数，默认为总步数的10%"""
     return max(1, int(total_steps * warmup_ratio))
 
-def train_model(config, output_dir=None):
+def train_model(config, output_dir=None, silent=False):
     """
     使用给定配置训练模型，可选择指定输出目录
+    
+    Args:
+        config: 训练配置字典
+        output_dir: 输出目录路径
+        silent: 是否静默模式（减少输出，用于消融实验）
     """
     # 解包配置
     BATCH_SIZE = config.get('batch_size', 64)
@@ -308,24 +313,27 @@ def train_model(config, output_dir=None):
     
     # Device configuration
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
+    if not silent:
+        print(f"Using device: {device}")
     
     # Load vocabulary
     word2int_en = load_vocab('./cmn-eng-simple/word2int_en.json')
     word2int_cn = load_vocab('./cmn-eng-simple/word2int_cn.json')
     int2word_cn = load_vocab('./cmn-eng-simple/int2word_cn.json')
     
-    print(f"English vocabulary size: {len(word2int_en)}")
-    print(f"Chinese vocabulary size: {len(word2int_cn)}")
+    if not silent:
+        print(f"English vocabulary size: {len(word2int_en)}")
+        print(f"Chinese vocabulary size: {len(word2int_cn)}")
     
     # Create datasets
     train_dataset = TranslationDataset('./cmn-eng-simple/training.txt', word2int_en, word2int_cn)
     val_dataset = TranslationDataset('./cmn-eng-simple/validation.txt', word2int_en, word2int_cn)
     test_dataset = TranslationDataset('./cmn-eng-simple/testing.txt', word2int_en, word2int_cn)
     
-    print(f"Training set size: {len(train_dataset)}")
-    print(f"Validation set size: {len(val_dataset)}")
-    print(f"Test set size: {len(test_dataset)}")
+    if not silent:
+        print(f"Training set size: {len(train_dataset)}")
+        print(f"Validation set size: {len(val_dataset)}")
+        print(f"Test set size: {len(test_dataset)}")
     
     # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
@@ -341,13 +349,28 @@ def train_model(config, output_dir=None):
         num_encoder_layers=NUM_ENCODER_LAYERS,
         num_decoder_layers=NUM_DECODER_LAYERS,
         d_ff=D_FF,
-        dropout=DROPOUT
+        dropout=DROPOUT,
+        use_positional_encoding=config.get('use_positional_encoding', True),
+        use_multihead_attention=config.get('use_multihead_attention', True),
+        activation=config.get('activation', 'relu'),
+        position_encoding_type=config.get('position_encoding_type', 'sinusoidal'),
+        norm_position=config.get('norm_position', 'post'),
+        use_layer_norm=config.get('use_layer_norm', True)
     ).to(device)
     
-    print(f"Model parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+    if not silent:
+        print(f"Model parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
     
     # Initialize optimizer
-    optimizer = Adam(model.parameters(), lr=LEARNING_RATE, betas=(0.9, 0.98), eps=1e-9)
+    optimizer_type = config.get('optimizer', 'adam')
+    if optimizer_type == 'adam':
+        optimizer = Adam(model.parameters(), lr=LEARNING_RATE, betas=(0.9, 0.98), eps=1e-9)
+    elif optimizer_type == 'adagrad':
+        optimizer = Adagrad(model.parameters(), lr=LEARNING_RATE)
+    elif optimizer_type == 'rmsprop':
+        optimizer = RMSprop(model.parameters(), lr=LEARNING_RATE)
+    else:
+        optimizer = Adam(model.parameters(), lr=LEARNING_RATE, betas=(0.9, 0.98), eps=1e-9)
     
     # 计算总步数
     steps_per_epoch = len(train_loader)
@@ -360,9 +383,10 @@ def train_model(config, output_dir=None):
         # 默认使用总步数的10%作为warmup步数，约为1-2个epoch
         warmup_steps = calculate_warmup_steps(total_steps, warmup_ratio=0.1)
     
-    print(f"Steps per epoch: {steps_per_epoch}")
-    print(f"Total steps: {total_steps}")
-    print(f"Warmup steps: {warmup_steps} (约 {warmup_steps/steps_per_epoch:.1f} 个epoch)")
+    if not silent:
+        print(f"Steps per epoch: {steps_per_epoch}")
+        print(f"Total steps: {total_steps}")
+        print(f"Warmup steps: {warmup_steps} (约 {warmup_steps/steps_per_epoch:.1f} 个epoch)")
     
     # 使用Warmup + 余弦退火学习率调度器
     scheduler = WarmupCosineScheduler(
@@ -390,10 +414,11 @@ def train_model(config, output_dir=None):
     }
     
     # Create metrics table
-    print("\nTraining metrics:")
-    print("-" * 90)
-    print(f"{'Epoch':^6} | {'Step':^8} | {'Train Loss':^10} | {'Train BLEU':^10} | {'Val Loss':^10} | {'Val BLEU':^10} | {'Test Loss':^10} | {'Test BLEU':^10} | {'LR':^10}")
-    print("-" * 90)
+    if not silent:
+        print("\nTraining metrics:")
+        print("-" * 90)
+        print(f"{'Epoch':^6} | {'Step':^8} | {'Train Loss':^10} | {'Train BLEU':^10} | {'Val Loss':^10} | {'Val BLEU':^10} | {'Test Loss':^10} | {'Test BLEU':^10} | {'LR':^10}")
+        print("-" * 90)
     
     global_step = 0
     for epoch in range(EPOCHS):
@@ -454,7 +479,8 @@ def train_model(config, output_dir=None):
         metrics['learning_rate'].append(current_lr)
         
         # Print metrics table row
-        print(f"{epoch+1:^6} | {global_step:^8} | {epoch_train_loss:^10.4f} | {train_bleu:^10.4f} | {val_loss:^10.4f} | {val_bleu:^10.4f} | {test_loss:^10.4f} | {test_bleu:^10.4f} | {current_lr:^10.6f}")
+        if not silent:
+            print(f"{epoch+1:^6} | {global_step:^8} | {epoch_train_loss:^10.4f} | {train_bleu:^10.4f} | {val_loss:^10.4f} | {val_bleu:^10.4f} | {test_loss:^10.4f} | {test_bleu:^10.4f} | {current_lr:^10.6f}")
         
         # 早停判断：验证集损失
         if val_loss < best_val_loss:
@@ -487,7 +513,8 @@ def train_model(config, output_dir=None):
         
         # 检查是否需要早停
         if early_stop_counter >= PATIENCE:
-            print(f"Early stopping triggered after {epoch+1} epochs")
+            if not silent:
+                print(f"Early stopping triggered after {epoch+1} epochs")
             break
         
         # Plot and save metrics every 5 epochs
@@ -497,18 +524,22 @@ def train_model(config, output_dir=None):
             metrics_df.to_csv(os.path.join(output_dir, 'training_metrics.csv'), index=False)
     
     # Final evaluation on test set with the best BLEU model
-    print("\nFinal evaluation on test set...")
+    if not silent:
+        print("\nFinal evaluation on test set...")
     checkpoint = torch.load(os.path.join(output_dir, 'best_bleu_model.pth'))
     model.load_state_dict(checkpoint['model_state_dict'])
     test_loss, test_bleu = evaluate(model, test_loader, criterion, device, int2word_cn, calculate_bleu=True)
-    print(f'Final Test Loss: {test_loss:.4f}, BLEU: {test_bleu:.4f}')
+    if not silent:
+        print(f'Final Test Loss: {test_loss:.4f}, BLEU: {test_bleu:.4f}')
     
     # Calculate and display n-gram BLEU scores
-    print("\nDetailed n-gram BLEU scores on test set:")
+    if not silent:
+        print("\nDetailed n-gram BLEU scores on test set:")
     ngram_bleus = calculate_ngram_bleus(model, test_loader, device, int2word_cn)
-    for n, bleu_score in enumerate(ngram_bleus, 1):
-        print(f'BLEU-{n} (n-gram={n}): {bleu_score:.4f}')
-    print(f'BLEU-4 (weighted): {test_bleu:.4f}')
+    if not silent:
+        for n, bleu_score in enumerate(ngram_bleus, 1):
+            print(f'BLEU-{n} (n-gram={n}): {bleu_score:.4f}')
+        print(f'BLEU-4 (weighted): {test_bleu:.4f}')
     
     # 额外绘制学习率变化曲线
     plt.figure(figsize=(10, 6))
@@ -539,7 +570,7 @@ def train_model(config, output_dir=None):
 def main():
     # 默认配置
     config = {
-        'batch_size': 64,
+        'batch_size': 256,
         'epochs': 30,
         'learning_rate': 1e-3,  # 初始学习率
         'd_model': 256,
