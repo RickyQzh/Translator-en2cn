@@ -8,6 +8,23 @@ A comprehensive Transformer-based English-to-Chinese translation system with ext
 
 ## 🚀 Quick Start
 
+
+### Single Model Training
+```bash
+python train.py
+```
+
+
+### Translation
+```bash
+# Interactive translation
+python translate.py --sentence "Hello, how are you?" --beam_size 5
+
+# Greedy decoding
+python translate.py --sentence "Good morning!" --beam_size 1
+```
+
+
 ### Direct Experiment Execution
 ```bash
 # Run different experiment types directly with Python:
@@ -21,19 +38,7 @@ python3 ablation_study.py --all --max_concurrent 4              # All experiment
 python3 ablation_study.py --help
 ```
 
-### Translation
-```bash
-# Interactive translation
-python translate.py --sentence "Hello, how are you?" --beam_size 5
 
-# Greedy decoding
-python translate.py --sentence "Good morning!" --beam_size 1
-```
-
-### Single Model Training
-```bash
-python train.py
-```
 
 ## 📊 Model Architecture
 
