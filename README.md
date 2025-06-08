@@ -182,26 +182,10 @@ python3 ablation_study.py --all --max_concurrent 4
 The experiment system is centered around `ablation_study.py`:
 
 **🔬 Core Python Program** (`ablation_study.py`):
-- The main experiment engine that runs all ablation studies
 - Handles parallel execution, experiment configuration, and result collection
 - Supports different experiment types through command-line arguments
-- Includes GPU detection and memory management
-
-### Smart Features
-- **Automatic GPU Detection**: Recommends optimal concurrency
-- **Colored Output**: Clear status indicators and progress tracking
-- **Dry-run Mode**: Preview commands before execution
-- **Fault Tolerance**: Individual experiment failures don't affect others
-- **Silent Mode**: Reduced output during ablation studies
 
 ## 🏃 Training Process
-
-### Optimization Features
-- **Early Stopping**: Monitors validation loss (patience: 5 epochs)
-- **Label Smoothing**: Factor 0.1 with KL divergence loss
-- **Learning Rate Scheduling**: Warmup + cosine decay
-- **Mixed Precision**: Automatic if available
-- **Gradient Clipping**: Prevents gradient explosion
 
 ### Training Configuration
 ```python
@@ -280,11 +264,6 @@ python translate.py --sentence "Hello world" --beam_size 10
   - Can be used to reproduce best results
   - Records all hyperparameter settings
 
-### Evaluation Metrics
-- **BLEU Scores**: BLEU-1 through BLEU-4 with detailed analysis
-- **Training Metrics**: Loss, accuracy, convergence speed
-- **Computational Efficiency**: Training time, memory usage
-- **Statistical Significance**: Multiple runs for reliable conclusions
 
 ## 🛠️ Installation and Requirements
 
